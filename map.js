@@ -51,17 +51,22 @@ var sjMap = {
           mapElement.data('overview-control') :
           true,
       mapTypeControlOptions: {
-       mapTypeIds: [ 'Styled']
+        mapTypeIds: [
+          'Styled',
+          google.maps.MapTypeId.ROADMAP,
+          google.maps.MapTypeId.SATELLITE,
+          google.maps.MapTypeId.HYBRID,
+          google.maps.MapTypeId.TERRAIN
+        ]
      },
-     mapTypeId: 'Styled'
+     mapTypeId: google.maps.MapTypeId.TERRAIN
   }
-
-  var styles = [];
 
   map = new google.maps.Map(mapElement.get(0), myOptions );
   var mapStyle = mapElement.data('map-style');
-  console.log("style: "+mapStyle)
+
   if (mapStyle) {
+    console.log('styled');
     var styledMapType = new google.maps.StyledMapType(mapStyle, { name: 'Styled' } );
     map.mapTypes.set('Styled', styledMapType);
   }
@@ -71,14 +76,16 @@ var sjMap = {
     content: infocontent,
     maxWidth: 500
   });
-   var mapElement = $('#map_canvas');
-   var route = mapElement.data('route-waypoints');
-   if (route.length > 0)
+
+  var route = mapElement.data('route-waypoints');
+  if (route.length > 0)
      this.drawRoute(route);
-   var postMarkers = mapElement.data('post-markers');
-   if (postMarkers.length > 0)
+
+  var postMarkers = mapElement.data('post-markers');
+  if (postMarkers.length > 0)
      this.drawPostMarkers(postMarkers);
   },
+
 
   drawRoute: function(markers) {
     var markerCoordinates = new Array();
@@ -86,11 +93,11 @@ var sjMap = {
       var marker = markers[i];
       var coords = new google.maps.LatLng(marker['lat'], marker['lng']);
       markerCoordinates.push(coords);
-      if ($('#map_canvas').data('route-show-markers') == 'yes') {
+      if (mapElement.data('route-show-markers') == 'yes') {
         this.addMarker(marker['name'], coords, marker['icon'], i, null, null);
       }
     }
-    if ($('#map_canvas').data('route-show') == 'yes') {
+    if (mapElement.data('route-show') == 'yes') {
       var stroke_style = $('#map_canvas').data('route-stroke').split(' ');
       var route = new google.maps.Polyline({
         path: markerCoordinates,
@@ -103,10 +110,10 @@ var sjMap = {
   },
 
   drawPostMarkers: function(markers) {
-    console.log('Add post markers');
+    //console.log('Add post markers');
     for (var i = 0; i < markers.length; i++) {
       var marker = markers[i];
-      console.log(marker);
+      //console.log(marker);
       var coords = new google.maps.LatLng(marker['lat'], marker['lng']);
       this.addMarker( marker['name'], coords, marker['icon'],
         marker['index'], marker['url'], marker['summary']
