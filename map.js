@@ -8,7 +8,7 @@ var sjMap = {
   iconPath: 'images/',
   map: null,
   mapElement: null,
-  infowindow: null,
+  infoWindow: null,
 
   initialize: function(){
     // set up map using data attribute settings or defaults
@@ -58,70 +58,76 @@ var sjMap = {
           google.maps.MapTypeId.HYBRID,
           google.maps.MapTypeId.TERRAIN
         ]
-     },
-     mapTypeId: google.maps.MapTypeId.TERRAIN
-  }
+      },
+      mapTypeId: google.maps.MapTypeId.TERRAIN
+    }
 
-  map = new google.maps.Map(mapElement.get(0), myOptions );
-  var mapStyle = mapElement.data('map-style');
+    map = new google.maps.Map(mapElement.get(0), myOptions );
+    var mapStyle = mapElement.data('map-style');
 
-  if (mapStyle) {
-    console.log('styled');
-    var styledMapType = new google.maps.StyledMapType(mapStyle, { name: 'Styled' } );
-    map.mapTypes.set('Styled', styledMapType);
-  }
+    if (mapStyle) {
+      console.log('styled');
+      var styledMapType = new google.maps.StyledMapType(mapStyle, { name: 'Styled' } );
+      map.mapTypes.set('Styled', styledMapType);
+    }
 
-  var infocontent = document.createElement("DIV");
-  infowindow = new google.maps.InfoWindow({
-    content: infocontent,
-    maxWidth: 500
-  });
+    var infocontent = document.createElement("DIV");
+    infoWindow = new google.maps.InfoWindow({
+      content: infocontent,
+      maxWidth: 500
+    });
 
-  var route = mapElement.data('route-waypoints');
-  if (route.length > 0)
-     this.drawRoute(route);
+    var routes = mapElement.data('route-waypoints');
+    for (var i = 0; i < routes.length; i++) {
+      this.drawRoute(routes[i]);
+    }
 
-  var postMarkers = mapElement.data('post-markers');
-  if (postMarkers.length > 0)
-     this.drawPostMarkers(postMarkers);
+    var postMarkers = mapElement.data('post-markers');
+    if (postMarkers.length > 0)
+      this.drawPostMarkers(postMarkers);
   },
 
-
-  drawRoute: function(markers) {
+  drawRoute: function(route) {
+    // define a Polyline and/or waypoint markers from an array of waypoints
+    var markers = route['markers'];
     var markerCoordinates = new Array();
     for (var i = 0; i < markers.length; i++) {
       var marker = markers[i];
-      var coords = new google.maps.LatLng(marker['lat'], marker['lng']);
+      var coords = new google.maps.LatLng( marker['lat'], marker['lng'] );
       markerCoordinates.push(coords);
-      if (mapElement.data('route-show-markers') == 'yes') {
-        this.addMarker(marker['name'], coords, marker['icon'], i, null, null);
+      if (route['showMarkers'] == 'yes') {
+        this.addMarker( marker['name'], coords, marker['icon'], i, null, null, route['id'], null );
       }
     }
-    if (mapElement.data('route-show') == 'yes') {
-      var stroke_style = $('#map_canvas').data('route-stroke').split(' ');
-      var route = new google.maps.Polyline({
+    if (route['showRoute'] == 'yes') {
+      var stroke_style = route['stroke'].split(' ');
+      var routeLine = new google.maps.Polyline({
         path: markerCoordinates,
         strokeColor: stroke_style[0],
         strokeOpacity: stroke_style[1],
-        strokeWeight: stroke_style[2]
+        strokeWeight: stroke_style[2],
+        name: route['name'],
+        id: route['id']
       });
-      route.setMap(map);
+      routeLine.setMap(map);
     }
   },
 
   drawPostMarkers: function(markers) {
-    //console.log('Add post markers');
+    // draw map markers from an array of post data
     for (var i = 0; i < markers.length; i++) {
       var marker = markers[i];
-      //console.log(marker);
       var coords = new google.maps.LatLng(marker['lat'], marker['lng']);
-      this.addMarker( marker['name'], coords, marker['icon'],
-        marker['index'], marker['url'], marker['summary']
+      this.addMarker(
+        marker['name'], coords, marker['icon'], marker['index'],
+        marker['url'], marker['summary'], null, marker['category']
       );
     }
   },
 
-  addMarker: function(title, coords, icon, z, url, summary) {
+  addMarker: function(title, coords, icon, z, url, summary, route, category) {
+    // add marker to map and store additional attributes to allow identifying
+    // marker by route or category.
     var iconUrl = icon ? this.iconPath + icon + '.png' : '';
     var marker = new google.maps.Marker({
       position: coords,
@@ -130,23 +136,26 @@ var sjMap = {
       title: title,
       zIndex: z,
       url: url,
-      html: summary
+      html: summary,
+      route: route,
+      category: category
     });
 
     if (url) {
+      // attach click event listener if url exists
       google.maps.event.addListener(marker, "click", function() {
-        alert('click');
         window.location.href = this.url;
       });
     }
 
     if (summary) {
+      // attach mouseover event if summary exists
       google.maps.event.addListener(marker, "mouseover", function() {
-        infowindow.setContent('<div class="map-info-bubble-text">'+this.html+'</div>');
-        infowindow.open(map, this);
+        infoWindow.setContent('<div class="map-info-bubble-text">'+this.html+'</div>');
+        infoWindow.open(map, this);
       });
       google.maps.event.addListener(marker, "mouseout", function() {
-        infowindow.close();
+        infoWindow.close();
       });
     }
   }
