@@ -59,14 +59,16 @@ var sjMap = {
           google.maps.MapTypeId.TERRAIN
         ]
       },
-      mapTypeId: google.maps.MapTypeId.TERRAIN
+      mapTypeId:
+        mapElement.data('map-type') ?
+          mapElement.data('map-type') :
+          google.maps.MapTypeId.ROADMAP
     }
 
     map = new google.maps.Map(mapElement.get(0), myOptions );
     var mapStyle = mapElement.data('map-style');
 
     if (mapStyle) {
-      console.log('styled');
       var styledMapType = new google.maps.StyledMapType(mapStyle, { name: 'Styled' } );
       map.mapTypes.set('Styled', styledMapType);
     }
@@ -128,7 +130,7 @@ var sjMap = {
   addMarker: function(title, coords, icon, z, url, summary, route, category) {
     // add marker to map and store additional attributes to allow identifying
     // marker by route or category.
-    var iconUrl = icon ? this.iconPath + icon + '.png' : '';
+    var iconUrl = icon ? this.iconPath + icon + '.png' : this.iconPath + '0.png';
     var marker = new google.maps.Marker({
       position: coords,
       map: map,
