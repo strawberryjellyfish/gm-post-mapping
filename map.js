@@ -1,4 +1,3 @@
-
 $(document).ready(function () {
   sjMap.initialize();
 });
@@ -9,46 +8,48 @@ var sjMap = {
   map: null,
   mapElement: null,
   infoWindow: null,
+  routes: [],
+  markers: [],
 
   initialize: function(){
     // set up map using data attribute settings or defaults
-    mapElement = $('#map_canvas');
+    this.mapElement = $('#map_canvas');
     var myOptions = {
       backgroundColor:
-        mapElement.data('background-color') ?
-          mapElement.data('background-color') :
+        this.mapElement.data('background-color') ?
+          this.mapElement.data('background-color') :
           "#B3D1FF",
       zoom:
-        mapElement.data('zoom') ?
-          mapElement.data('zoom') :
+        this.mapElement.data('zoom') ?
+          this.mapElement.data('zoom') :
           4,
       center:
-        mapElement.data('center') ?
+        this.mapElement.data('center') ?
           new google.maps.LatLng(mapElement.data('center')) :
           new google.maps.LatLng(-23.6, 133.3),
       mapTypeControl:
-        mapElement.data('type-control') ?
-          mapElement.data('type-control') :
+        this.mapElement.data('type-control') ?
+          this.mapElement.data('type-control') :
           true,
       panControl:
-        mapElement.data('pan-control') ?
-          mapElement.data('pan-control') :
+        this.mapElement.data('pan-control') ?
+          this.mapElement.data('pan-control') :
           true,
       zoomControl:
-        mapElement.data('zoom-control') ?
-          mapElement.data('zoom-control') :
+        this.mapElement.data('zoom-control') ?
+          this.mapElement.data('zoom-control') :
           true,
       scaleControl:
-        mapElement.data('scale-control') ?
-          mapElement.data('scale-control') :
+        this.mapElement.data('scale-control') ?
+          this.mapElement.data('scale-control') :
           true,
       streetViewControl:
-        mapElement.data('street-control') ?
-          mapElement.data('street-control') :
+        this.mapElement.data('street-control') ?
+          this.mapElement.data('street-control') :
           true,
       overviewMapControl:
-        mapElement.data('overview-control') ?
-          mapElement.data('overview-control') :
+        this.mapElement.data('overview-control') ?
+          this.mapElement.data('overview-control') :
           true,
       mapTypeControlOptions: {
         mapTypeIds: [
@@ -60,31 +61,31 @@ var sjMap = {
         ]
       },
       mapTypeId:
-        mapElement.data('map-type') ?
-          mapElement.data('map-type') :
+        this.mapElement.data('map-type') ?
+          this.mapElement.data('map-type') :
           google.maps.MapTypeId.ROADMAP
     }
 
-    map = new google.maps.Map(mapElement.get(0), myOptions );
-    var mapStyle = mapElement.data('map-style');
+    this.map = new google.maps.Map(this.mapElement.get(0), myOptions );
+    var mapStyle = this.mapElement.data('map-style');
 
     if (mapStyle) {
       var styledMapType = new google.maps.StyledMapType(mapStyle, { name: 'Styled' } );
-      map.mapTypes.set('Styled', styledMapType);
+      this.map.mapTypes.set('Styled', styledMapType);
     }
 
     var infocontent = document.createElement("DIV");
-    infoWindow = new google.maps.InfoWindow({
+    this.infoWindow = new google.maps.InfoWindow({
       content: infocontent,
       maxWidth: 500
     });
 
-    var routes = mapElement.data('route-waypoints');
+    var routes = this.mapElement.data('route-waypoints');
     for (var i = 0; i < routes.length; i++) {
       this.drawRoute(routes[i]);
     }
 
-    var postMarkers = mapElement.data('post-markers');
+    var postMarkers = this.mapElement.data('post-markers');
     if (postMarkers.length > 0)
       this.drawPostMarkers(postMarkers);
   },
@@ -111,8 +112,9 @@ var sjMap = {
         name: route['name'],
         id: route['id']
       });
-      routeLine.setMap(map);
+      routeLine.setMap(this.map);
     }
+    this.routes.push(routeLine);
   },
 
   drawPostMarkers: function(markers) {
@@ -133,7 +135,7 @@ var sjMap = {
     var iconUrl = icon ? this.iconPath + icon + '.png' : this.iconPath + '0.png';
     var marker = new google.maps.Marker({
       position: coords,
-      map: map,
+      map: this.map,
       icon: iconUrl,
       title: title,
       zIndex: z,
@@ -153,12 +155,14 @@ var sjMap = {
     if (summary) {
       // attach mouseover event if summary exists
       google.maps.event.addListener(marker, "mouseover", function() {
-        infoWindow.setContent('<div class="map-info-bubble-text">'+this.html+'</div>');
-        infoWindow.open(map, this);
+        sjMap.infoWindow.setContent('<div class="map-info-bubble-text">'+this.html+'</div>');
+        sjMap.infoWindow.open(this.map, this);
       });
       google.maps.event.addListener(marker, "mouseout", function() {
-        infoWindow.close();
+        sjMap.infoWindow.close();
       });
     }
+
+    this.markers.push(marker);
   }
 }
