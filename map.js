@@ -1,18 +1,31 @@
+/*
+// sjMap.js - plot markers and polyline routes on a googlemap
+//
+// geodata and config options are read from data attributes on the #map_canvas
+// div which is also the element that will contain teh googlemap. This js is
+// intended to be worked into a more extensive WordPress plugin which will
+// handle all the data collation, hence not worrying about it here.
+// By the way the intended destination as part of a WordPress plugin also
+// explains the somewhat daunting number of settings...
+// trying to be as flexible as possible
+//
+// rob@strawberryjellyfish.com
+//
+*/
+
 $(document).ready(function () {
   sjMap.initialize();
 });
 
 var sjMap = {
-
-  iconPath: 'images/',
-  map: null,
-  mapElement: null,
-  infoWindow: null,
-  routes: [],
-  markers: [],
+  iconPath: 'images/',  // path to marker icon images
+  map: null,            // conatins the google map object
+  mapElement: null,     // the DOM element containing the map
+  infoWindow: null,     // the googlemap infoWindow object used for info bubbles
+  routes: new Array(),  // array of route polyline objects
+  markers: new Array(), // array of map marker objects
 
   // setup functions
-
   initialize: function(){
     // set up map using data attribute settings or defaults
     this.mapElement = $('#map_canvas');
@@ -126,6 +139,7 @@ var sjMap = {
       );
 
       google.maps.event.addListener(this.map, 'bounds_changed', function() {
+        // TODO: Fix Me!
         if (strictBounds.contains(this.getCenter())) return;
 
         // We're out of bounds - Move the map back within the bounds
@@ -146,6 +160,8 @@ var sjMap = {
         console.log('center '+y+' '+x);
       });
     }
+
+    this.buildRouteDropdown(routes);
   },
 
   drawRoute: function(route) {
@@ -257,15 +273,38 @@ var sjMap = {
 
   // Utility functions
 
+  hideAll: function() {
+    // hide all markers and routes on the map (nothing is destroyed)
+    $.each( sjMap.markers, function(index, value) {
+      if (value) sjMap.hideMarker(value.id);
+    });
+    $.each( sjMap.routes, function(index, value) {
+      if (value) sjMap.hideRoute(value.id);
+    });
+  },
+
+  showAll: function() {
+    // make all markers and routes visible
+    $.each( sjMap.markers, function(index, value) {
+      if (value) sjMap.showMarker(value.id);
+    });
+    $.each( sjMap.routes, function(index, value) {
+      if (value) sjMap.showRoute(value.id);
+    });
+  },
+
   showRoute: function(routeId) {
+    // make the route with id routeId visible
     if (routeId) sjMap.routes[routeId].setMap(sjMap.map);
   },
 
   hideRoute: function(routeId) {
+    // make the route with id routeId hidden
     if (routeId) sjMap.routes[routeId].setMap(null);
   },
 
   showRoutes: function(routeIds) {
+    // make the routes with ids in routeIds array visible
     if (routeIds) {
       $.each( routeIds, function(index, value) {
         sjMap.showRoute(value);
@@ -274,6 +313,7 @@ var sjMap = {
   },
 
   hideRoutes: function(routeIds) {
+    // make the routes with ids in routeIds array hidden
     if (routeIds) {
       $.each( routeIds, function(index, value) {
         sjMap.hideRoute(value);
@@ -282,10 +322,12 @@ var sjMap = {
   },
 
   showMarker: function(markerId) {
+    // make the marker with id markerId visible
     if (markerId) sjMap.markers[markerId].setMap(sjMap.map);
   },
 
   hideMarker: function(markerId) {
+    // make the marker with id markerId hidden
     if (markerId) sjMap.markers[markerId].setMap(null);
   },
 
@@ -295,6 +337,7 @@ var sjMap = {
   },
 
   showMarkers: function(markersIds) {
+    // make the markers with ids in markersIds array visible
     if (markerIds) {
       $.each( markersIds, function(index, value) {
         sjMap.showMarker(value);
@@ -303,6 +346,7 @@ var sjMap = {
   },
 
   hideMarkers: function(markersIds) {
+    // make the markers with ids in markersIds array hidden
     if (markerIds) {
       $.each( markersIds, function(index, value) {
         sjMap.hideMarker(value);
@@ -310,47 +354,200 @@ var sjMap = {
     }
   },
 
-  showMarkersByCategory: function(categoryId) {
+  showMarkersByCategory: function(categoryId, clear) {
+    // make the markers with the categoryId visible,
+    // clear = true : clear all other markers
     $.each( sjMap.markers, function(index, value) {
-      if (value && value.category == categoryId)
+      if (value && value.category == categoryId) {
         sjMap.showMarker(value.id);
+      } else if (value && clear) {
+        sjMap.hideMarker(value.id);
+      }
     });
   },
 
   hideMarkersByCategory: function(categoryId) {
+    // make the markers with the categoryId hidden
     $.each( sjMap.markers, function(index, value) {
       if (value && value.category == categoryId)
         sjMap.hideMarker(value.id);
     });
   },
 
-  showMarkersByRoute: function(routeId, showRoute, showPost) {
+  showMarkersByRoute: function(routeId, route, post, clear) {
+    // make the markers with the routeId visible,
+    // route = true : show route markers
+    // post = true : show post markers
+    // clear = true : clear all other markers
     $.each( sjMap.markers, function(index, value) {
       if ( value && value.route == routeId ) {
-        if (showRoute && value.type == 'route') sjMap.showMarker(value.id);
-        if (showPost && value.type == 'post') sjMap.showMarker(value.id);
+        if (route && value.type == 'route') sjMap.showMarker(value.id);
+        if (post && value.type == 'post') sjMap.showMarker(value.id);
+      } else if (value && clear) {
+        sjMap.hideMarker(value.id);
       }
     });
   },
 
-  hideMarkersByRoute: function(routeId, hideRoute, hidePost) {
+  hideMarkersByRoute: function(routeId, route, post) {
+    // make the markers with the routeId hidden,
+    // route = true : hide route markers
+    // post = true : hide post markers
     $.each( sjMap.markers, function(index, value) {
       if (value && value.route == routeId ) {
-        if (hideRoute && value.type == 'route') sjMap.hideMarker(value.id);
-        if (hidePost && value.type == 'post') sjMap.hideMarker(value.id);
+        if (route && value.type == 'route') sjMap.hideMarker(value.id);
+        if (post && value.type == 'post') sjMap.hideMarker(value.id);
       }
     });
   },
 
-  // fadeRoute: function(routeId) {
-  //   var op = 1;  // initial opacity
-  //   var timer = setInterval(function () {
-  //     if (op <= 0.1){
-  //       clearInterval(timer);
-  //       sjMap.routes[routeId].setOptions({ strokeOpacity: 0});
-  //     }
-  //     sjMap.routes[routeId].setOptions({ strokeOpacity: op});
-  //     op -= op * 0.1;
-  //   }, 100);
-  // }
+  buildRouteDropdown: function(routes) {
+    // build a map dropdown control for routes
+    var dropDownItems = new Array();
+    $.each( routes, function(index, value) {
+      var divOptions = {
+        name: value.name,
+        title: '',
+        id: 'sjMapRouteControl-' + value.id,
+        action: function(){
+          sjMap.hideAll();
+          console.log('Route show: ' + value.id);
+          sjMap.showRoute(value.id);
+          sjMap.showMarkersByRoute(value.id, true, true);
+        }
+      }
+      dropDownItems.push(new sjMap.optionDiv(divOptions));
+    });
+
+    var divOptions = {
+      name: 'Show All',
+      title: '',
+      id: 'sjMapRouteControl-all',
+      action: function(){
+        sjMap.showAll();
+      }
+    }
+    dropDownItems.push(new sjMap.separator());
+    dropDownItems.push(new sjMap.optionDiv(divOptions));
+
+    var checkOptions = {
+      title: "Also show markers associated with visible routes",
+      id: "showRouteMarkers",
+      label: "Markers",
+      action: function(){
+        // TODO: set up action function to toggle marker status,
+        // also need to add a Listener to trigger the action!
+      }
+    }
+    dropDownItems.push(new sjMap.checkBox(checkOptions));
+
+    var dropDownOptions = { items: dropDownItems, id: 'routeDropDown' };
+    var routeDropDownDiv = new sjMap.dropDownOptionsDiv(dropDownOptions);
+
+    var dropDownOptions = {
+      name: 'Routes',
+      id: 'sjMapRouteDD',
+      title: '',
+      position: google.maps.ControlPosition.TOP_RIGHT,
+      dropDown: routeDropDownDiv
+    }
+
+    var routeDropDown = new sjMap.dropDownControl(dropDownOptions);
+
+  },
+
+  //  custom map control functions
+
+  optionDiv: function(options) {
+    var control = document.createElement('DIV');
+    control.className = "dropDownItemDiv";
+    control.title = options.title;
+    control.id = options.id;
+    control.innerHTML = options.name;
+    google.maps.event.addDomListener(control, 'click', options.action);
+    return control;
+  },
+
+  checkBox: function(options) {
+    //first make the outer container
+    var container = document.createElement('DIV');
+    container.className = "checkboxContainer";
+    container.title = options.title;
+
+    var span = document.createElement('SPAN');
+    span.role = "checkbox";
+    span.className = "checkboxSpan";
+
+    var bDiv = document.createElement('DIV');
+    bDiv.className = "blankDiv";
+    bDiv.id = options.id;
+
+    var image = document.createElement('IMG');
+    image.className = "blankImg";
+    image.src = "http://maps.gstatic.com/mapfiles/mv/imgs8.png";
+
+    var label = document.createElement('LABEL');
+    label.className = "checkboxLabel";
+    label.innerHTML = options.label;
+
+    bDiv.appendChild(image);
+    span.appendChild(bDiv);
+    container.appendChild(span);
+    container.appendChild(label);
+
+    google.maps.event.addDomListener(container, 'click', function() {
+      (document.getElementById(bDiv.id).style.display == 'block') ? document.getElementById(bDiv.id).style.display = 'none' : document.getElementById(bDiv.id).style.display = 'block';
+      options.action();
+    })
+    return container;
+  },
+
+  separator: function() {
+    var sep = document.createElement('DIV');
+    sep.className = "separatorDiv";
+    return sep;
+  },
+
+  dropDownOptionsDiv: function(options) {
+    var container = document.createElement('DIV');
+    container.className = "dropDownOptionsDiv";
+    container.id = options.id;
+    for (i = 0; i < options.items.length; i++) {
+      container.appendChild(options.items[i]);
+    }
+    return container;
+  },
+
+  dropDownControl: function(options) {
+    var container = document.createElement('DIV');
+    container.className = 'container';
+    var control = document.createElement('DIV');
+    control.className = 'dropDownControl';
+    control.innerHTML = options.name;
+    control.id = options.id;
+    var arrow = document.createElement('IMG');
+    arrow.src = "http://maps.gstatic.com/mapfiles/arrow-down.png";
+    arrow.className = 'dropDownArrow';
+    control.appendChild(arrow);
+    container.appendChild(control);
+    container.appendChild(options.dropDown);
+
+    sjMap.map.controls[options.position].push(container);
+    google.maps.event.addDomListener(container, 'click', function() {
+      (document.getElementById(options.dropDown.id).style.display == 'block') ? document.getElementById(options.dropDown.id).style.display = 'none' : document.getElementById(options.dropDown.id).style.display = 'block';
+      setTimeout(function() {
+        document.getElementById(options.dropDown.id).style.display = 'none';
+      }, 1500);
+    })
+  },
+
+  buttonControl: function(options) {
+    var control = document.createElement('DIV');
+    control.innerHTML = options.name;
+    control.className = 'button';
+    control.index = 1;
+    sjMap.map.controls[options.position].push(control);
+    google.maps.event.addDomListener(control, 'click', options.action);
+    return control;
+  }
 }
