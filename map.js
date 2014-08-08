@@ -222,7 +222,7 @@ var sjMap = {
       var coords = new google.maps.LatLng(marker['lat'], marker['lng']);
       this.addMarker(
         marker['id'], marker['name'], coords, marker['icon'], marker['index'],
-        marker['url'], marker['summary'], 'post', null, marker['category']
+        marker['url'], marker['summary'], 'post', marker['route'], marker['category']
       );
     }
   },
