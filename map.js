@@ -214,12 +214,17 @@ var sjMap = {
   addMarker: function(id, title, coords, icon, z, url, summary, type, route, category) {
     // add marker to map and store additional attributes to allow identifying
     // marker by route or category.
-    var iconUrl = icon ? this.iconPath + icon + '.png' : this.iconPath + '0.png';
+    var markerIcon = {
+      url: icon ? this.iconPath + icon + '.png' : this.iconPath + '0.png',
+      size: new google.maps.Size(32, 32),
+      origin: new google.maps.Point(0,0),
+      anchor: new google.maps.Point(16,16)
+    };
     var marker = new google.maps.Marker({
       id: id,
       position: coords,
       map: this.map,
-      icon: iconUrl,
+      icon: markerIcon,
       title: title,
       zIndex: z,
       url: url,
