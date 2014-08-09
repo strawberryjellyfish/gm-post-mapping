@@ -18,12 +18,13 @@ $(document).ready(function () {
 });
 
 var sjMap = {
-  iconPath: 'images/',  // path to marker icon images
-  map: null,            // conatins the google map object
-  mapElement: null,     // the DOM element containing the map
-  infoWindow: null,     // the googlemap infoWindow object used for info bubbles
-  routes: new Array(),  // array of route polyline objects
-  markers: new Array(), // array of map marker objects
+  iconPath: 'images/',    // path to marker icon images
+  map: null,              // conatins the google map object
+  mapElement: null,       // the DOM element containing the map
+  infoWindow: null,       // the googlemap infoWindow object used for info bubbles
+  routes: new Array(),    // array of route polyline objects
+  markers: new Array(),   // array of map marker objects
+  categories: new Array(), // array of map marker categories
 
   // setup functions
   initialize: function(){
@@ -94,6 +95,14 @@ var sjMap = {
         this.mapElement.data('overview-control') ?
           this.mapElement.data('overview-control') :
           true,
+      categoryControl:
+        this.mapElement.data('category-control') ?
+          this.mapElement.data('category-control') :
+          true,
+      routeControl:
+        this.mapElement.data('route-control') ?
+          this.mapElement.data('route-control') :
+          true,
       mapTypeControlOptions: {
         mapTypeIds: [
           'Styled',
@@ -123,6 +132,7 @@ var sjMap = {
       maxWidth: 500
     });
 
+    var categories = this.mapElement.data('categories');
     var routes = this.mapElement.data('route-waypoints');
     for (var i = 0; i < routes.length; i++) {
       this.drawRoute(routes[i]);
@@ -161,7 +171,10 @@ var sjMap = {
       });
     }
 
-    this.buildRouteDropdown(routes);
+    if (myOptions['routeControl'])
+      this.buildRouteDropdown(routes);
+    if (myOptions['categoryControl'])
+      this.buildCategoryDropdown(categories);
   },
 
   drawRoute: function(route) {
@@ -222,12 +235,12 @@ var sjMap = {
       var coords = new google.maps.LatLng(marker['lat'], marker['lng']);
       this.addMarker(
         marker['id'], marker['name'], coords, marker['icon'], marker['index'],
-        marker['url'], marker['summary'], 'post', marker['route'], marker['category']
+        marker['url'], marker['summary'], 'post', marker['route'], marker['cat']
       );
     }
   },
 
-  addMarker: function(id, title, coords, icon, z, url, summary, type, route, category) {
+  addMarker: function(id, title, coords, icon, z, url, summary, type, route, categories) {
     // add marker to map and store additional attributes to allow identifying
     // marker by route or category.
     var markerIcon = {
@@ -247,7 +260,7 @@ var sjMap = {
       html: summary,
       type: type,
       route: route,
-      category: category
+      categories: categories
     });
 
     if (url) {
@@ -283,14 +296,18 @@ var sjMap = {
     });
   },
 
-  showAll: function() {
+  showAll: function(routes, markers) {
     // make all markers and routes visible
-    $.each( sjMap.markers, function(index, value) {
-      if (value) sjMap.showMarker(value.id);
-    });
-    $.each( sjMap.routes, function(index, value) {
-      if (value) sjMap.showRoute(value.id);
-    });
+    if (markers) {
+      $.each( sjMap.markers, function(index, value) {
+        if (value) sjMap.showMarker(value.id);
+      });
+    }
+    if (routes) {
+      $.each( sjMap.routes, function(index, value) {
+        if (value) sjMap.showRoute(value.id);
+      });
+    }
   },
 
   showRoute: function(routeId) {
@@ -357,8 +374,8 @@ var sjMap = {
   showMarkersByCategory: function(categoryId, clear) {
     // make the markers with the categoryId visible,
     // clear = true : clear all other markers
-    $.each( sjMap.markers, function(index, value) {
-      if (value && value.category == categoryId) {
+      $.each( sjMap.markers, function(index, value) {
+      if (value && value.categories && value.categories.split(',').indexOf(categoryId.toString()) > -1) {
         sjMap.showMarker(value.id);
       } else if (value && clear) {
         sjMap.hideMarker(value.id);
@@ -369,7 +386,7 @@ var sjMap = {
   hideMarkersByCategory: function(categoryId) {
     // make the markers with the categoryId hidden
     $.each( sjMap.markers, function(index, value) {
-      if (value && value.category == categoryId)
+      if (value && value.categories && value.categories.split(',').indexOf(categoryId) > -1 )
         sjMap.hideMarker(value.id);
     });
   },
@@ -424,26 +441,14 @@ var sjMap = {
       title: '',
       id: 'sjMapRouteControl-all',
       action: function(){
-        sjMap.showAll();
+        sjMap.showAll(true, false);
       }
     }
     dropDownItems.push(new sjMap.separator());
     dropDownItems.push(new sjMap.optionDiv(divOptions));
 
-    var checkOptions = {
-      title: "Also show markers associated with visible routes",
-      id: "showRouteMarkers",
-      label: "Markers",
-      action: function(){
-        // TODO: set up action function to toggle marker status,
-        // also need to add a Listener to trigger the action!
-      }
-    }
-    dropDownItems.push(new sjMap.checkBox(checkOptions));
-
     var dropDownOptions = { items: dropDownItems, id: 'routeDropDown' };
     var routeDropDownDiv = new sjMap.dropDownOptionsDiv(dropDownOptions);
-
     var dropDownOptions = {
       name: 'Routes',
       id: 'sjMapRouteDD',
@@ -451,11 +456,48 @@ var sjMap = {
       position: google.maps.ControlPosition.TOP_RIGHT,
       dropDown: routeDropDownDiv
     }
-
     var routeDropDown = new sjMap.dropDownControl(dropDownOptions);
 
   },
 
+
+  buildCategoryDropdown: function(categories) {
+    // build a map dropdown control for marker categories
+    var dropDownItems = new Array();
+    $.each( categories, function(index, value) {
+      var divOptions = {
+        name: value.name,
+        id: 'sjMapCategoryControl-' + value.id,
+        action: function(){
+          sjMap.showMarkersByCategory(value.id, true);
+        }
+      }
+      dropDownItems.push(new sjMap.optionDiv(divOptions));
+    });
+
+    var divOptions = {
+      name: 'Show All',
+      title: '',
+      id: 'sjMapCategoryControl-all',
+      action: function(){
+        sjMap.showAll(false, true);
+      }
+    }
+    dropDownItems.push(new sjMap.separator());
+    dropDownItems.push(new sjMap.optionDiv(divOptions));
+
+    var dropDownOptions = { items: dropDownItems, id: 'categoryDropDown' };
+    var categoryDropDownDiv = new sjMap.dropDownOptionsDiv(dropDownOptions);
+    var dropDownOptions = {
+      name: 'Categories',
+      id: 'sjMapCategoryDD',
+      title: '',
+      position: google.maps.ControlPosition.TOP_RIGHT,
+      dropDown: categoryDropDownDiv
+    }
+    var categoryDropDown = new sjMap.dropDownControl(dropDownOptions);
+
+  },
   //  custom map control functions
 
   optionDiv: function(options) {
