@@ -31,6 +31,10 @@ var sjMap = {
     // set up map using data attribute settings or defaults
     this.mapElement = $('#map_canvas');
     var myOptions = {
+      disableClusters:
+        this.mapElement.data('disable-clusters') ?
+          this.mapElement.data('disable-clusters') :
+          false,
       backgroundColor:
         this.mapElement.data('background-color') ?
           this.mapElement.data('background-color') :
@@ -54,11 +58,11 @@ var sjMap = {
       constrain_ne:
         this.mapElement.data('constrain_ne') ?
           new google.maps.LatLng(mapElement.data('constrain_ne')) :
-          new google.maps.LatLng(6.122611334025562, -169.74488196250002),
+          new google.maps.LatLng(15, 200),
       constrain_sw:
         this.mapElement.data('constrain_sw') ?
           new google.maps.LatLng(mapElement.data('constrain_sw')) :
-          new google.maps.LatLng(-37.19162567748894, 77.04999999999995),
+          new google.maps.LatLng(-55, 70),
       disableDoubleClickZoom:
         this.mapElement.data('disable-double-click') ?
           this.mapElement.data('disable-double-click') :
@@ -118,9 +122,16 @@ var sjMap = {
           google.maps.MapTypeId.ROADMAP
     }
 
-    this.map = new google.maps.Map(this.mapElement.get(0), myOptions );
-    var mapStyle = this.mapElement.data('map-style');
+    var clusterOptions = {
+      batchSize: 100,
+      averageCenter: true,
+      enableRetinaIcons: true,
+      gridSize: 20
+    }
 
+    this.map = new google.maps.Map(this.mapElement.get(0), myOptions );
+
+    var mapStyle = this.mapElement.data('map-style');
     if (mapStyle) {
       var styledMapType = new google.maps.StyledMapType(mapStyle, { name: 'Styled' } );
       this.map.mapTypes.set('Styled', styledMapType);
@@ -142,34 +153,37 @@ var sjMap = {
     if (postMarkers.length > 0)
       this.drawPostMarkers(postMarkers);
 
-    if (myOptions['constrain_ne'] && myOptions['constrain_sw']) {
+    if (! myOptions['disableClusters'])
+        var markerCluster = new MarkerClusterer(this.map, this.markers, clusterOptions);
 
-      var strictBounds = new google.maps.LatLngBounds(
-        myOptions['constrain_sw'], myOptions['constrain_ne']
-      );
+    // if (myOptions['constrain_ne'] && myOptions['constrain_sw']) {
 
-      google.maps.event.addListener(this.map, 'bounds_changed', function() {
-        // TODO: Fix Me!
-        if (strictBounds.contains(this.getCenter())) return;
+    //   var strictBounds = new google.maps.LatLngBounds(
+    //     myOptions['constrain_sw'], myOptions['constrain_ne']
+    //   );
 
-        // We're out of bounds - Move the map back within the bounds
-        var c = this.getCenter(),
-        x = c.lng(),
-        y = c.lat(),
-        maxX = strictBounds.getNorthEast().lng(),
-        maxY = strictBounds.getNorthEast().lat(),
-        minX = strictBounds.getSouthWest().lng(),
-        minY = strictBounds.getSouthWest().lat();
+    //   google.maps.event.addListener(this.map, 'bounds_changed', function() {
+    //     // TODO: Fix Me!
+    //     if (strictBounds.contains(this.getCenter())) return;
 
-        if (x < minX) x = minX;
-        if (x > maxX) x = maxX;
-        if (y < minY) y = minY;
-        if (y > maxY) y = maxY;
+    //     // We're out of bounds - Move the map back within the bounds
+    //     var c = this.getCenter(),
+    //     x = c.lng(),
+    //     y = c.lat(),
+    //     maxX = strictBounds.getNorthEast().lng(),
+    //     maxY = strictBounds.getNorthEast().lat(),
+    //     minX = strictBounds.getSouthWest().lng(),
+    //     minY = strictBounds.getSouthWest().lat();
 
-        this.setCenter(new google.maps.LatLng(y, x));
-        console.log('center '+y+' '+x);
-      });
-    }
+    //     if (x < minX) x = minX;
+    //     if (x > maxX) x = maxX;
+    //     if (y < minY) y = minY;
+    //     if (y > maxY) y = maxY;
+
+    //     this.setCenter(new google.maps.LatLng(y, x));
+    //     console.log('center '+y+' '+x);
+    //   });
+    // }
 
     if (myOptions['routeControl'])
       this.buildRouteDropdown(routes);
@@ -428,7 +442,6 @@ var sjMap = {
         id: 'sjMapRouteControl-' + value.id,
         action: function(){
           sjMap.hideAll();
-          console.log('Route show: ' + value.id);
           sjMap.showRoute(value.id);
           sjMap.showMarkersByRoute(value.id, true, true);
         }
@@ -503,7 +516,7 @@ var sjMap = {
   optionDiv: function(options) {
     var control = document.createElement('DIV');
     control.className = "dropDownItemDiv";
-    control.title = options.title;
+    if (options.title) control.title = options.title;
     control.id = options.id;
     control.innerHTML = options.name;
     google.maps.event.addDomListener(control, 'click', options.action);
@@ -577,9 +590,6 @@ var sjMap = {
     sjMap.map.controls[options.position].push(container);
     google.maps.event.addDomListener(container, 'click', function() {
       (document.getElementById(options.dropDown.id).style.display == 'block') ? document.getElementById(options.dropDown.id).style.display = 'none' : document.getElementById(options.dropDown.id).style.display = 'block';
-      setTimeout(function() {
-        document.getElementById(options.dropDown.id).style.display = 'none';
-      }, 1500);
     })
   },
 

@@ -16,15 +16,12 @@ contexts too
 
 ##TODO##
 
-* Custom  map controls for routes and category selection
-* Tidy up custom control Listeners and styles
 * Custom info panel (alternative to the ubiquitous info bubble)
-* Tidy up  infowindow styles
-* Marker clustering
-* Complete support for route/category ids in marker json
+* Tidy up infowindow styles
 * Highlight selected marker animation?
 * Animate a map route, (run though route markers in sequence)
 * Fix boundary limits
+* Split marker summary html into individual summary text and featured image
 
 ##Phase 2##
 

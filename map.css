@@ -17,6 +17,8 @@ html, body, #wrapper{
   cursor: pointer;
   text-align: left;
   z-index: 0;
+  overflow: hidden;
+  height: auto;
 }
 
 .dropDownControl,
@@ -61,7 +63,7 @@ html, body, #wrapper{
 
 .dropDownOptionsDiv {
   z-index: 0;
-  padding-top: 2px;
+  padding-top: 0px;
   position: relative;
   display: none;
 }
