@@ -15,6 +15,20 @@
 	<body>
 		<div id="wrapper">
 			<div id="map_canvas"
+
+			data-map-options='{
+				"mapStyle" : "Styled",
+				"disableClusters" : "true"
+			}'
+
+			data-animate='{
+				"enabled" : "true",
+				"autoStart" : "true",
+				"showControls" : "true",
+				"post" : "true",
+				"delay" : 3000
+		 	}'
+
 			data-route-waypoints='[
 				{
 					"name":"Finishing Up",
@@ -283,13 +297,14 @@
 				{"id":1001,"name":"Ngilgi Cave","lat":-33.64225,"lng":115.03418299999998,"icon":"","index":94,"url":"http://sharkaroo.net/ngilgi-cave/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2012/09/IMG_9843-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"IMG_9843\" \/><h4>Ngilgi Cave<\/h4><p>&nbsp;<\/p>"},
 				{"id":1000,"name":"The Pinnacles","lat":-30.6472222,"lng":115.21111109999993,"icon":"","index":95,"url":"http://sharkaroo.net/the-pinnacles/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2012/09/IMG_9753-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"The Pinnacles Desert, Numbung, WA\" \/><h4>The Pinnacles<\/h4><p>The Pinnacles was one of the places I had put on my must visit list before coming to Australia. It&#8217;s a very strange and very [...]<\/p>"}
 			]'
+
 			data-categories='[
 				{ "id":1, "name":"Category 1" },
 				{ "id":2, "name":"Category 2" },
 				{ "id":3, "name":"Category 3" },
 				{ "id":4, "name":"Category 4" }
 			]'
-			data-map-type='Styled'
+
 			data-map-style='[
 				{
 					"featureType":"water",

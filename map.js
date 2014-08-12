@@ -24,88 +24,91 @@ var sjMap = {
   infoWindow: null,       // the googlemap infoWindow object used for info bubbles
   routes: new Array(),    // array of route polyline objects
   markers: new Array(),   // array of map marker objects
+  markersIndex: new Array(),// array of markers ids
   categories: new Array(), // array of map marker categories
-
+  animOptions: null,       // animation Options hash
+  anim: null,              // animation object
   // setup functions
   initialize: function(){
     // set up map using data attribute settings or defaults
     this.mapElement = $('#map_canvas');
+    var mapOptions = this.mapElement.data('map-options');
     var myOptions = {
       disableClusters:
-        this.mapElement.data('disable-clusters') ?
-          this.mapElement.data('disable-clusters') :
+        mapOptions.disableClusters ?
+          mapOptions.disableClusters :
           false,
       backgroundColor:
-        this.mapElement.data('background-color') ?
-          this.mapElement.data('background-color') :
+        mapOptions.backgroundColor ?
+          mapOptions.backgroundColor :
           "#B3D1FF",
       zoom:
-        this.mapElement.data('zoom') ?
-          this.mapElement.data('zoom') :
+        mapOptions.zoom ?
+          mapOptions.zoom :
           4,
       min_zoom:
-        this.mapElement.data('min-zoom') ?
-          this.mapElement.data('min-zoom') :
+        mapOptions.minZoom ?
+          mapOptions.minZoom :
           1,
       max_zoom:
-        this.mapElement.data('max-zoom') ?
-          this.mapElement.data('max-zoom') :
+        mapOptions.maxZoom ?
+          mapOptions.maxZoom :
           20,
       center:
-        this.mapElement.data('center') ?
-          new google.maps.LatLng(mapElement.data('center')) :
+        mapOptions.center ?
+          new google.maps.LatLng(mapOptions.center) :
           new google.maps.LatLng(-23.6, 133.3),
       constrain_ne:
-        this.mapElement.data('constrain_ne') ?
-          new google.maps.LatLng(mapElement.data('constrain_ne')) :
+        mapOptions.constrainNe ?
+          new google.maps.LatLng(mapOptions.constrainNe) :
           new google.maps.LatLng(15, 200),
       constrain_sw:
-        this.mapElement.data('constrain_sw') ?
-          new google.maps.LatLng(mapElement.data('constrain_sw')) :
+        mapOptions.constrainSw ?
+          new google.maps.LatLng(mapOptions.constrainSw) :
           new google.maps.LatLng(-55, 70),
       disableDoubleClickZoom:
-        this.mapElement.data('disable-double-click') ?
-          this.mapElement.data('disable-double-click') :
+        mapOptions.disableDoubleClick ?
+          mapOptions.disableDoubleClick :
           true,
       draggable:
-        this.mapElement.data('draggable') ?
-          this.mapElement.data('draggable') :
+        mapOptions.draggable ?
+          mapOptions.draggable :
           true,
       scrollable:
-        this.mapElement.data('scrollable') ?
-          this.mapElement.data('scrollable') :
+        mapOptions.scrollable ?
+          mapOptions.scrollable :
           true,
       mapTypeControl:
-        this.mapElement.data('type-control') ?
-          this.mapElement.data('type-control') :
+        mapOptions.typeControl ?
+          mapOptions.typeControl :
           true,
       panControl:
-        this.mapElement.data('pan-control') ?
-          this.mapElement.data('pan-control') :
+        mapOptions.panControl ?
+          mapOptions.panControl :
           true,
       zoomControl:
-        this.mapElement.data('zoom-control') ?
-          this.mapElement.data('zoom-control') :
+        mapOptions.zoomControl ?
+          mapOptions.zoomControl :
           true,
       scaleControl:
-        this.mapElement.data('scale-control') ?
-          this.mapElement.data('scale-control') :
+        mapOptions.scaleControl ?
+          mapOptions.scaleControl :
           true,
       streetViewControl:
-        this.mapElement.data('street-control') ?
-          this.mapElement.data('street-control') :
+        mapOptions.streetControl ?
+          mapOptions.streetControl :
           true,
       overviewMapControl:
-        this.mapElement.data('overview-control') ?
-          this.mapElement.data('overview-control') :
+        mapOptions.overviewControl ?
+          mapOptions.overviewControl :
           true,
       categoryControl:
-        this.mapElement.data('category-control') ?
-          this.mapElement.data('category-control') :
+        mapOptions.categoryControl ?
+          mapOptions.categoryControl :
           true,
       routeControl:
-        this.mapElement.data('route-control') ?
-          this.mapElement.data('route-control') :
+        mapOptions.routeControl ?
+          mapOptions.routeControl :
           true,
       mapTypeControlOptions: {
         mapTypeIds: [
@@ -117,8 +120,8 @@ var sjMap = {
         ]
       },
       mapTypeId:
-        this.mapElement.data('map-type') ?
-          this.mapElement.data('map-type') :
+        mapOptions.mapType ?
+          mapOptions.mapType :
           google.maps.MapTypeId.ROADMAP
     }
 
@@ -154,7 +157,7 @@ var sjMap = {
       this.drawPostMarkers(postMarkers);
 
     if (! myOptions['disableClusters'])
-        var markerCluster = new MarkerClusterer(this.map, this.markers, clusterOptions);
+      var markerCluster = new MarkerClusterer(this.map, this.markers, clusterOptions);
 
     // if (myOptions['constrain_ne'] && myOptions['constrain_sw']) {
 
@@ -185,10 +188,30 @@ var sjMap = {
     //   });
     // }
 
-    if (myOptions['routeControl'])
+    if (myOptions.routeControl)
       this.buildRouteDropdown(routes);
-    if (myOptions['categoryControl'])
+    if (myOptions.categoryControl)
       this.buildCategoryDropdown(categories);
+
+
+
+
+    // set up  options for marker sequence animation
+    if (this.mapElement.data('animate')) {
+      this.animOptions = this.mapElement.data('animate');
+      this.animOptions.position = 0;
+
+      if (this.animOptions.post) {
+        sjMap.animOptions.markers = sjMap.objectFindByKey(sjMap.markers, 'type', 'post');
+      } else if (this.animOptions.route) {
+        this.animOptions.markers = this.objectFindByKey(this.markers, 'route', this.animOptions['route']);
+      }
+      if (this.animOptions.markers && this.animOptions.enabled && this.animOptions.autoStart) {
+        google.maps.event.addListenerOnce(this.map, 'tilesloaded', function() {
+          this.anim = setTimeout(sjMap.playAnim(), sjMap.animOptions.delay);
+        });
+      }
+    }
   },
 
   drawRoute: function(route) {
@@ -295,6 +318,7 @@ var sjMap = {
       });
     }
     this.markers[marker.id] = marker;
+    this.markersIndex.push(marker.id);
   },
 
 
@@ -431,6 +455,29 @@ var sjMap = {
       }
     });
   },
+
+  playAnim: function() {
+    if (this.animOptions.position < this.animOptions.markers.length) {
+      var marker = this.animOptions.markers[this.animOptions.position];
+      this.map.panTo(marker.getPosition());
+      this.infoWindow.setContent(marker.html);
+      this.infoWindow.open(this.map, marker);
+      route = setTimeout('sjMap.playAnim()', sjMap.animOptions.delay);
+    } else if (this.animOptions.loop) {
+      this.animOptions.position = 0;
+      var marker = this.animOptions.markers[this.animOptions.position];
+      this.map.panTo(marker.getPosition());
+      this.infoWindow.setContent(marker.html);
+      this.infoWindow.open(this.map, marker);
+      route = setTimeout('google.maps.event.addListenerOnce(sjMap.map, "tilesloaded", function() { sjMap.playAnim(); }', sjMap.animOptions.delay);
+    } else {
+      clearTimeout(this.anim);
+      this.animOptions.position = 0;
+      this.anim = null;
+    }
+    this.animOptions.position += 1;
+  },
+
 
   buildRouteDropdown: function(routes) {
     // build a map dropdown control for routes
@@ -601,5 +648,14 @@ var sjMap = {
     sjMap.map.controls[options.position].push(control);
     google.maps.event.addDomListener(control, 'click', options.action);
     return control;
+  },
+
+  objectFindByKey: function(array, key, value) {
+    var found = new Array();
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] && array[i][key] === value)
+        found.push(array[i]);
+    }
+    return found.length > 0 ? found : null;
   }
 }
