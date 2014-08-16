@@ -17,7 +17,7 @@ html, body, #wrapper{
   cursor: pointer;
   text-align: left;
   z-index: 0;
-  overflow: hidden;
+  overflow: visible;
   height: auto;
 }
 
@@ -25,7 +25,8 @@ html, body, #wrapper{
 .dropDownOptionsDiv,
 .dropDownItemDiv,
 .dropDownArrow,
-.checkboxSpan {
+.checkboxSpan,
+.button {
   -moz-user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
@@ -39,7 +40,8 @@ html, body, #wrapper{
 }
 
 .dropDownControl,
-.dropDownOptionsDiv {
+.dropDownOptionsDiv,
+.button {
   overflow: hidden;
   position: relative;
   padding: 1px 6px;
@@ -73,7 +75,8 @@ html, body, #wrapper{
 }
 
 .dropDownItemDiv:hover,
-.checkboxContainer:hover {
+.checkboxContainer:hover,
+.button:hover {
   background-color: rgb(235, 235, 235);
 }
 
@@ -128,5 +131,9 @@ html, body, #wrapper{
 
 .checkboxLabel {
   vertical-align: middle;
+  cursor: pointer;
+}
+
+span.markerLink {
   cursor: pointer;
 }
