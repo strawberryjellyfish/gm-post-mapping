@@ -17,11 +17,11 @@ contexts too
 ##TODO##
 
 * Custom info panel (alternative to the ubiquitous info bubble)
-* Tidy up infowindow styles
+* Fix map type configuration
 * Highlight selected marker animation?
-* Animate a map route, (run though route markers in sequence)
 * Fix boundary limits
 * Split marker summary html into individual summary text and featured image
+* Event more config options: control positions, cluster settings etc...
 
 ##Phase 2##
 

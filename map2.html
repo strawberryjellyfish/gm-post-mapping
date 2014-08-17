@@ -10,15 +10,19 @@
     <script src="markerclusterer_packed.js"></script>
 		<script src="map.js"></script>
 		<link rel='stylesheet' href='map.css' type='text/css' media='all' />
+		<link rel='stylesheet' href='map2.css' type='text/css' media='all' />
 
 		<script>
 			$(document).ready(function () {
-  			var firstMap = {};
-  			sjMap.call(firstMap, '#map_canvas_1');
-  			firstMap.initialize();
-			});
-		</script>
+   			var firstMap = {};
+   			sjMap.call(firstMap, '#map_canvas_1');
+   			firstMap.initialize();
 
+   			var secondMap = {};
+   			sjMap.call(secondMap, '#map_canvas_2');
+   			secondMap.initialize();
+ 			});
+		</script>
 	</head>
 
 	<body>
@@ -35,7 +39,7 @@
 				"autoStart" : "true",
 				"showControls" : "true",
 				"post" : "true",
-				"delay" : 4000
+				"delay" : 3000
 		 	}'
 
 			data-route-waypoints='[
@@ -372,6 +376,43 @@
 						{"lightness":20}
 					]
 				}]' >
+
+      </div>
+
+
+
+      <div id="map_canvas_2"
+
+			data-map-options='{
+				"zoom" : 2
+			}'
+
+			data-animate='{
+				"enabled" : "true",
+				"showControls" : "true",
+				"post" : "true",
+				"delay" : 3000
+		 	}'
+
+			data-post-markers='[
+				{"cat":"1","id":1093,"name":"Harms Lake","lat":-32.459061,"lng":123.86604599999998,"icon":"","index":0,"url":"http://sharkaroo.net/harms-lake/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1926-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"Harmes Lake\" \/><h4>Harms Lake<\/h4><p>Harms Lake, another rest area on the Ayre Highway in Western Australia. A pleasant little spot amongst the trees by the (mostly dry at [...]<\/p>"},
+				{"cat":"1","id":1092,"name":"Najada Rockhole","lat":-31.75,"lng":128.54999999999995,"icon":"","index":1,"url":"http://sharkaroo.net/najada-rockhole/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1836-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"Hazy sunset\" \/><h4>Najada Rockhole<\/h4><p>Najada Rockhole on the Eyre Highway, on first appearances an unremarkable rest stop but plenty of space to get away from the road and [...]<\/p>"},
+				{"cat":"1","id":1091,"name":"Next stop Antarctica","lat":-31.6377364,"lng":129.3887598,"icon":"","index":2,"url":"http://sharkaroo.net/next-stop-antacrtica/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1807-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"Bunda Cliffs\" \/><h4>Next stop Antarctica<\/h4><p>No trip along the Ayre Highway would be complete without taking a few minutes out to view the Bunda cliffs that drop sheerly into the [...]<\/p>"},
+				{"cat":"2","id":1090,"name":"No trees, no phone","lat":-31.45368289999999,"lng":131.7070344,"icon":"","index":3,"url":"http://sharkaroo.net/no-trees/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1793-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"Animal warning sign on the Nallarbor\" \/><h4>No trees, no phone<\/h4><p>On the Nullarbor at the Nullarbor Roadhouse utilising their wifi . Heading back to Western Australia and the final leg of our trip this [...]<\/p>"},
+				{"cat":"2","id":1089,"name":"Ceduna","lat":-32.1267343,"lng":133.67377839999995,"icon":"","index":4,"url":"http://sharkaroo.net/ceduna/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/08/IMG_1744-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"Jetty at Ceduna\" \/><h4>Ceduna<\/h4><p>Stopped for lunch in Ceduna, to be precise we parked up looking out over the sea, raided the fridge and made a sandwich, it is handy [...]<\/p>"},
+				{"cat":"2","id":1088,"name":"Sunset at Aldinga Beach","lat":-35.2789261,"lng":138.46076389999996,"icon":"","index":5,"url":"http://sharkaroo.net/sunset-at-aldinga-beach/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1527-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"Sunset near Aldinga Beach\" \/><h4>Sunset at Aldinga Beach<\/h4><p>We&#8217;ve been staying at a caravan park near Aldinga Beach for a while waiting for some temporary work to start. Although [...]<\/p>"},
+				{"cat":"3","id":1087,"name":"The Granites","lat":-36.658054,"lng":139.85527,"icon":"","index":6,"url":"http://sharkaroo.net/the-granites/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1507-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"The Granites, South Australia\" \/><h4>The Granites<\/h4><p>The Granites, as the name suggests, are some rocks. Some large rounded boulders set in the sand on the beach. What makes them [...]<\/p>"},
+				{"cat":"4","id":1086,"name":"Blue Lake","lat":-37.8469229,"lng":140.77651689999993,"icon":"","index":7,"url":"http://sharkaroo.net/blue-lake/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1451_1-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"Blue Lake, Mount Gambier\" \/><h4>Blue Lake<\/h4><p>Mount Gambier in South Australia is well known for it&#8217;s distinctive landmark the Blue Lake. The lake sits in a crater of the old [...]<\/p>"},
+				{"cat":"1,2,3,4","id":1085,"name":"Into South Australia","lat":-37.504452,"lng":140.58193,"icon":"","index":8,"url":"http://sharkaroo.net/into-south-australia/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1409-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"IMG_1409\" \/><h4>Into South Australia<\/h4><p>And so, we passed into South Australia and have now ticked off all the Australian States, apart from ACT but we didn&#8217;t have much [...]<\/p>"},
+				{"id":1084,"name":"Carvings in Dartmoor","lat":-37.9202421,"lng":141.2757765,"icon":"","index":9,"url":"http://sharkaroo.net/carvings-in-dartmoor/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/02/IMG_1373-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"Carving in Dartmoor\" \/><h4>Carvings in Dartmoor<\/h4><p>I must admit the only reason we originally visited Dartmoor in Victoria was that because it made good overnight stop, but I&#8217;m [...]<\/p>"},
+				{"id":1083,"name":"Petrified Forest","lat":-38.3463453,"lng":141.6042096,"icon":"","index":10,"url":"http://sharkaroo.net/petrified-forest/","summary":"<img src=\"http://sharkaroo.net/wp-content/uploads/sites/6/2013/04/IMG_1292_1-150x150.jpg\" class=\"alignleft wp-post-image\" alt=\"The Petrified Forest\" \/><h4>Petrified Forest<\/h4><p><\/p>"}
+			]'
+
+			data-categories='[
+				{ "id":1, "name":"Category 1" },
+				{ "id":2, "name":"Category 2" }
+			]'
+			>
 
       </div>
 		</div>

@@ -13,30 +13,23 @@
 //
 */
 
-$(document).ready(function () {
-  var firstMap = {};
-  sjMap.call(firstMap);
-  firstMap.initialize();
-});
-
-var sjMap = function(){
-  iconPath = 'images/';       // path to marker icon images
-  map = null;                 // conatins the google map object
-  mapElement = null;          // the DOM element containing the map
-  infoWindow = null;          // the googlemap infoWindow object used for info bubbles
-  routes = new Array();       // array of route polyline objects
-  markers = new Array();      // array of map marker objects
-  markersIndex = new Array(); // array of markers ids
-  categories = new Array();   // array of map marker categories
-  animOptions = null;         // animation Options hash
-  anim = null;                // animation object
-  instance = this;            // keeping track
+var sjMap = function(elementId){
+  this.iconPath = 'images/';       // path to marker icon images
+  this.map = null;                 // conatins the google map object
+  this.mapElement = elementId ? $(elementId) : $('#map_canvas');        // the DOM element containing the map
+  this.infoWindow = null;          // the googlemap infoWindow object used for info bubbles
+  this.routes = new Array();       // array of route polyline objects
+  this.markers = new Array();      // array of map marker objects
+  this.markersIndex = new Array(); // array of markers ids
+  this.categories = new Array();   // array of map marker categories
+  this.animOptions = null;         // animation Options hash
+  this.anim = null;                // animation object
+  this.instance = this;            // keeping track
 
   // setup functions
   this.initialize = function(elementId){
     // set up map using data attribute settings or defaults
-    mapElement = elementId ? $(elementId) : $('#map_canvas');
-    var mapOptions = mapElement.data('map-options');
+    var mapOptions = this.mapElement.data('map-options');
     var myOptions = {
       disableClusters:
         mapOptions.disableClusters ?
@@ -125,6 +118,7 @@ var sjMap = function(){
         style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
         position: google.maps.ControlPosition.TOP_RIGHT
       },
+      // TODO: fix handling of alternate map types
       mapTypeId:
         mapOptions.mapType ?
           mapOptions.mapType :
@@ -140,26 +134,26 @@ var sjMap = function(){
 
 
     // initialize map
-    map = new google.maps.Map(mapElement.get(0), myOptions );
+    this.map = new google.maps.Map(this.mapElement.get(0), myOptions );
 
     // add custom style if defined
-    var mapStyle = mapElement.data('map-style');
+    var mapStyle = this.mapElement.data('map-style');
     if (mapStyle) {
       var styledMapType = new google.maps.StyledMapType(mapStyle, { name: 'Styled' } );
-      map.mapTypes.set('Styled', styledMapType);
+      this.map.mapTypes.set('Styled', styledMapType);
     }
 
     // initialize infowindow object
     var infocontent = document.createElement("DIV");
-    infoWindow = new google.maps.InfoWindow({
+    this.infoWindow = new google.maps.InfoWindow({
       content: infocontent,
       maxWidth: 500
     });
 
     // setup marker, category and route variables from element data-attributes
-    var postMarkers = mapElement.data('post-markers');
-    var categories = mapElement.data('categories');
-    var routes = mapElement.data('route-waypoints');
+    var postMarkers = this.mapElement.data('post-markers');
+    var categories = this.mapElement.data('categories');
+    var routes = this.mapElement.data('route-waypoints');
 
     // populate the map with routes & markers
     if (routes && routes.length > 0) {
@@ -172,7 +166,7 @@ var sjMap = function(){
 
     // markers are clustered by defualt but can be disabled via options
     if (! myOptions['disableClusters'])
-      var markerCluster = new MarkerClusterer(map, markers, clusterOptions);
+      this.markerCluster = new MarkerClusterer(this.map, this.markers, clusterOptions);
 
     // if (myOptions['constrain_ne'] && myOptions['constrain_sw']) {
 
@@ -208,21 +202,22 @@ var sjMap = function(){
     if (myOptions.categoryControl) this.buildCategoryDropdown(categories);
 
     // set up sequence animation
-    if (mapElement.data('animate')) {
-      animOptions = mapElement.data('animate');
-      animOptions.position = 0;
+    if (this.mapElement.data('animate')) {
+      this.animOptions = this.mapElement.data('animate');
+      this.animOptions.position = 0;
 
-      if (animOptions.post) {
-        animOptions.markers = this.objectFindByKey(markers, 'type', 'post');
-      } else if (animOptions.route) {
-        animOptions.markers = this.objectFindByKey(markers, 'route', animOptions.route);
+      if (this.animOptions.post) {
+        this.animOptions.markers = this.objectFindByKey(this.markers, 'type', 'post');
+      } else if (this.animOptions.route) {
+        this.animOptions.markers = this.objectFindByKey(this.markers, 'route', this.animOptions.route);
       }
-      if (animOptions.markers && animOptions.enabled && animOptions.autoStart) {
-        google.maps.event.addListenerOnce(map, 'tilesloaded', function() {
-          anim = setTimeout(instance.playAnim(), animOptions.delay);
+      var _self = this;
+      if (this.animOptions.markers && this.animOptions.enabled && this.animOptions.autoStart) {
+        google.maps.event.addListenerOnce(this.map, 'tilesloaded', function() {
+          _self.anim = setTimeout(function(){_self.playAnim();}, _self.animOptions.delay);
         });
       }
-      if (! animOptions.hideControls)
+      if (! this.animOptions.hideControls)
         this.buildPlaybackControls();
 
     }
@@ -277,9 +272,9 @@ var sjMap = function(){
           }, 50);
         }
       });
-      routeLine.setMap(map);
+      routeLine.setMap(this.map);
     }
-    routes[routeLine.id] = routeLine;
+    this.routes[routeLine.id] = routeLine;
   }
 
   this.drawPostMarkers = function(markers) {
@@ -298,7 +293,7 @@ var sjMap = function(){
     // add marker to map and store additional attributes to allow identifying
     // marker by route or category.
     var markerIcon = {
-      url: icon ? iconPath + icon + '.png' : iconPath + '0.png',
+      url: icon ? this.iconPath + icon + '.png' : this.iconPath + '0.png',
       size: new google.maps.Size(32, 32),
       origin: new google.maps.Point(0,0),
       anchor: new google.maps.Point(16,16)
@@ -307,7 +302,7 @@ var sjMap = function(){
     var marker = new google.maps.Marker({
       id: id,
       position: coords,
-      map: map,
+      map: this.map,
       icon: markerIcon,
       title: title,
       zIndex: z,
@@ -327,16 +322,17 @@ var sjMap = function(){
 
     if (summary) {
       // attach mouseover event if summary exists
+      var _self = this;
       google.maps.event.addListener(marker, "mouseover", function() {
-        infoWindow.setContent('<div class="map-info-bubble-text">'+this.html+'</div>');
-        infoWindow.open(this.map, this);
+        _self.infoWindow.setContent('<div class="map-info-bubble-text">'+this.html+'</div>');
+        _self.infoWindow.open(this.map, this);
       });
       google.maps.event.addListener(marker, "mouseout", function() {
-        infoWindow.close();
+        _self.infoWindow.close();
       });
     }
-    markers[marker.id] = marker;
-    markersIndex.push(marker.id);
+    this.markers[marker.id] = marker;
+    this.markersIndex.push(marker.id);
   }
 
 
@@ -355,44 +351,40 @@ var sjMap = function(){
 
   this.hideAll = function() {
     // hide all markers and routes on the map (nothing is destroyed)
-    if (markers) {
-      for (var i = 0; i < markers.length; i++) {
-        if (markers[i]) this.hideMarker(markers[i].id);
+    if (this.markers) {
+      for (var i = 0; i < this.markers.length; i++) {
+        if (this.markers[i]) this.hideMarker(this.markers[i].id);
       }
     }
-    if (routes) {
-      for (var i = 0; i < routes.length; i++) {
-        if (routes[i]) this.hideRoute(routes[i].id);
+    if (this.routes) {
+      for (var i = 0; i < this.routes.length; i++) {
+        if (this.routes[i]) this.hideRoute(this.routes[i].id);
       }
     }
   }
 
   this.showAll = function(showRoutes, showMarkers) {
     // make all markers and routes visible
-    console.log('show all: ' + showRoutes + ' ' +showMarkers);
-
     if (showMarkers) {
-      console.log('show markers');
-      for (var i = 0; i < markers.length; i++) {
-        if (markers[i]) this.showMarker(markers[i].id);
+      for (var i = 0; i < this.markers.length; i++) {
+        if (this.markers[i]) this.showMarker(this.markers[i].id);
       }
     }
     if (showRoutes) {
-      console.log('show routes');
-      for (var i = 0; i < routes.length; i++) {
-        if (routes[i]) this.showRoute(routes[i].id);
+      for (var i = 0; i < this.routes.length; i++) {
+        if (this.routes[i]) this.showRoute(this.routes[i].id);
       }
     }
   }
 
   this.showRoute = function(routeId) {
     // make the route with id routeId visible
-    if (routeId && routes[routeId]) routes[routeId].setMap(map);
+    if (routeId && this.routes[routeId]) this.routes[routeId].setMap(this.map);
   }
 
   this.hideRoute = function(routeId) {
     // make the route with id routeId hidden
-    if (routeId && routes[routeId]) routes[routeId].setMap(null);
+    if (routeId && this.routes[routeId]) this.routes[routeId].setMap(null);
   }
 
   this.showRoutes = function(routeIds) {
@@ -415,14 +407,12 @@ var sjMap = function(){
 
   this.showMarker = function(markerId) {
     // make the marker with id markerId visible
- //   console.log('show marker: '+markerId);
-    if (markerId && markers[markerId]) markers[markerId].setMap(map);
+    if (markerId && this.markers[markerId]) this.markers[markerId].setMap(this.map);
   }
 
   this.hideMarker = function(markerId) {
     // make the marker with id markerId hidden
-//    console.log('hide marker: '+markerId);
-    if (markerId && markers[markerId]) markers[markerId].setMap(null);
+    if (markerId && this.markers[markerId]) this.markers[markerId].setMap(null);
   }
 
   this.highlightMarker = function(markerId) {
@@ -451,13 +441,12 @@ var sjMap = function(){
   this.showMarkersByCategory = function(categoryId, clear) {
     // make the markers with the categoryId visible,
     // clear = true : clear all other markers
-    console.log(categoryId);
-    if (markers) {
-      for (var i = 0; i < markers.length; i++) {
-        if (markers[i] && markers[i].categories && markers[i].categories.split(',').indexOf(categoryId.toString()) > -1) {
-          this.showMarker(markers[i].id);
-        } else if (markers[i] && clear) {
-          this.hideMarker(markers[i].id);
+    if (this.markers) {
+      for (var i = 0; i < this.markers.length; i++) {
+        if (this.markers[i] && this.markers[i].categories && this.markers[i].categories.split(',').indexOf(categoryId.toString()) > -1) {
+          this.showMarker(this.markers[i].id);
+        } else if (this.markers[i] && clear) {
+          this.hideMarker(this.markers[i].id);
         }
       }
     }
@@ -465,11 +454,10 @@ var sjMap = function(){
 
   this.hideMarkersByCategory = function(categoryId) {
     // make the markers with the categoryId hidden
-    console.log(categoryId);
-    if (markers) {
-      for (var i = 0; i < markers.length; i++) {
-        if (markers[i] && markers[i].categories && markers[i].categories.split(',').indexOf(categoryId) > -1 )
-        this.hideMarker(markers[i].id);
+    if (this.markers) {
+      for (var i = 0; i < this.markers.length; i++) {
+        if (this.markers[i] && this.markers[i].categories && this.markers[i].categories.split(',').indexOf(categoryId) > -1 )
+        this.hideMarker(this.markers[i].id);
       }
     }
   }
@@ -479,13 +467,13 @@ var sjMap = function(){
     // route = true : show route markers
     // post = true : show post markers
     // clear = true : clear all other markers
-    if (markers) {
-      for (var i = 0; i < markers.length; i++) {
-        if ( markers[i] && markers[i].route == routeId ) {
-          if (route && markers[i].type == 'route') this.showMarker(markers[i].id);
-          if (post && markers[i].type == 'post') this.showMarker(markers[i].id);
-        } else if (markers[i] && clear) {
-          this.hideMarker(markers[i].id);
+    if (this.markers) {
+      for (var i = 0; i < this.markers.length; i++) {
+        if ( this.markers[i] && this.markers[i].route == routeId ) {
+          if (route && this.markers[i].type == 'route') this.showMarker(this.markers[i].id);
+          if (post && this.markers[i].type == 'post') this.showMarker(this.markers[i].id);
+        } else if (this.markers[i] && clear) {
+          this.hideMarker(this.markers[i].id);
         }
       }
     }
@@ -495,11 +483,11 @@ var sjMap = function(){
     // make the markers with the routeId hidden,
     // route = true : hide route markers
     // post = true : hide post markers
-    if (markers) {
-      for (var i = 0; i < markers.length; i++) {
-        if (markers[i] && markers[i].route == routeId ) {
-          if (route && markers[i].type == 'route') this.hideMarker(markers[i].id);
-          if (post && markers[i].type == 'post') this.hideMarker(markers[i].id);
+    if (this.markers) {
+      for (var i = 0; i < this.markers.length; i++) {
+        if (this.markers[i] && this.markers[i].route == routeId ) {
+          if (route && this.markers[i].type == 'route') this.hideMarker(this.markers[i].id);
+          if (post && this.markers[i].type == 'post') this.hideMarker(this.markers[i].id);
         }
       }
     }
@@ -507,140 +495,146 @@ var sjMap = function(){
 
   this.playAnim = function() {
     // pan map to each marker in turn and open infowindow
-    if (animOptions.position < animOptions.markers.length) {
-      this.gotoMarker(animOptions.markers[animOptions.position]);
-      this.anim = setTimeout('instance.playAnim()', animOptions.delay);
-      $('#sjMapPlaybackPlayPause').text('Pause');
-    } else if (animOptions.loop) {
-      animOptions.position = 0;
-      this.gotoMarker(animOptions.markers[animOptions.position]);
-      this.anim = setTimeout('google.maps.event.addListenerOnce(map, "tilesloaded", function() { instance.playAnim(); }', animOptions.delay);
+    var _self = this;
+    if (this.animOptions.position < this.animOptions.markers.length) {
+      this.gotoMarker(this.animOptions.markers[this.animOptions.position]);
+      this.anim = setTimeout(function(){_self.playAnim();}, _self.animOptions.delay);
+      $(this).find('.sjMapPlaybackPlayPause').text('Pause');
+    } else if (this.animOptions.loop) {
+      this.animOptions.position = 0;
+      this.gotoMarker(this.animOptions.markers[this.animOptions.position]);
+      this.anim = setTimeout(function(){_self.playAnim();}, _self.animOptions.delay);
     } else {
       clearTimeout(this.anim);
-      animOptions.position = 0;
+      this.animOptions.position = 0;
       this.anim = null;
-      $('#sjMapPlaybackPlayPause').text('Play');
+      $(this).find('.sjMapPlaybackPlayPause').text('Play');
     }
-    animOptions.position += 1;
+    this.animOptions.position += 1;
   }
+
 
   this.gotoMarker = function(marker, markerId) {
     // pan map to marker and open infowindow
     if (! marker)
       var marker = this.objectFindByKey(markers, 'id', markerId);
-    console.log('gotoMarker('+marker+', '+markerId+')');
-    //console.log(markers);
-    map.panTo(marker.getPosition());
+    this.map.panTo(marker.getPosition());
     this.openInfoWindow(marker);
   }
 
   this.openInfoWindow = function(marker, markerId) {
     if (! marker)
       var marker = this.objectFindByKey(markers, 'id', markerId);
-    infoWindow.setContent(marker.html);
-    infoWindow.open(map, marker);
+    this.infoWindow.setContent(marker.html);
+    this.infoWindow.open(this.map, marker);
   }
 
   this.buildRouteDropdown = function(routes) {
     // build a map dropdown control for routes
-    var dropDownItems = new Array();
-    for (var i = 0; i < routes.length; i++) {
+    if (routes && routes.length > 0) {
+      var _self = this;
+      var dropDownItems = new Array();
+      for (var i = 0; i < routes.length; i++) {
+        var divOptions = {
+          name: routes[i].name,
+          title: '',
+          className: 'sjMapRouteControl',
+          objid: routes[i].id,
+          action: function(){
+            _self.hideAll();
+            _self.showRoute(this.dataset.objid);
+            _self.showMarkersByRoute(this.dataset.objid, true, true);
+          }
+        }
+        dropDownItems.push(new this.optionDiv(divOptions));
+      }
+
       var divOptions = {
-        name: routes[i].name,
+        name: 'Show All',
         title: '',
-        id: 'sjMapRouteControl-' + routes[i].id,
-        objid: routes[i].id,
+        className: 'sjMapRouteControl-all',
         action: function(){
-          instance.hideAll();
-          instance.showRoute(this.dataset.objid);
-          instance.showMarkersByRoute(this.dataset.objid, true, true);
+          _self.showAll(true, true);
         }
       }
+      dropDownItems.push(new this.separator());
       dropDownItems.push(new this.optionDiv(divOptions));
-    }
 
-    var divOptions = {
-      name: 'Show All',
-      title: '',
-      id: 'sjMapRouteControl-all',
-      action: function(){
-        instance.showAll(true, true);
+      var dropDownOptions = { items: dropDownItems, id: 'routeDropDown' };
+      var routeDropDownDiv = new this.dropDownOptionsDiv(dropDownOptions);
+      var dropDownOptions = {
+        name: 'Routes',
+        className: 'sjMapRouteDD',
+        title: '',
+        position: google.maps.ControlPosition.TOP_RIGHT,
+        dropDown: routeDropDownDiv
       }
-    }
-    dropDownItems.push(new this.separator());
-    dropDownItems.push(new this.optionDiv(divOptions));
+      var routeDropDown = this.dropDownControl(dropDownOptions);
 
-    var dropDownOptions = { items: dropDownItems, id: 'routeDropDown' };
-    var routeDropDownDiv = new this.dropDownOptionsDiv(dropDownOptions);
-    var dropDownOptions = {
-      name: 'Routes',
-      id: 'sjMapRouteDD',
-      title: '',
-      position: google.maps.ControlPosition.TOP_RIGHT,
-      dropDown: routeDropDownDiv
     }
-    var routeDropDown = new this.dropDownControl(dropDownOptions);
-
   }
 
   this.buildCategoryDropdown = function(categories) {
-    // build a map dropdown control for marker categories
-    var dropDownItems = new Array();
-    for (var i = 0; i < categories.length; i++) {
+    if (categories && categories.length > 0) {
+      // build a map dropdown control for marker categories
+      var _self = this;
+      var dropDownItems = new Array();
+      for (var i = 0; i < categories.length; i++) {
+        var divOptions = {
+          name: categories[i].name,
+          className: 'sjMapCategoryControl',
+          objid: categories[i].id,
+          action: function(){
+            _self.showMarkersByCategory(this.dataset.objid, true);
+          }
+        }
+        dropDownItems.push(new this.optionDiv(divOptions));
+      }
+
       var divOptions = {
-        name: categories[i].name,
-        id: 'sjMapCategoryControl-' + categories[i].id,
-        objid: categories[i].id,
+        name: 'Show All',
+        title: '',
+        className: 'sjMapCategoryControl-all',
         action: function(){
-          instance.showMarkersByCategory(this.dataset.objid, true);
+          _self.showAll(false, true);
         }
       }
+      dropDownItems.push(new this.separator());
       dropDownItems.push(new this.optionDiv(divOptions));
-    }
-    //console.log(dropDownItems);
 
-    var divOptions = {
-      name: 'Show All',
-      title: '',
-      id: 'sjMapCategoryControl-all',
-      action: function(){
-        instance.showAll(false, true);
+      var dropDownOptions = { items: dropDownItems, id: 'categoryDropDown' };
+      var categoryDropDownDiv = new this.dropDownOptionsDiv(dropDownOptions);
+      var dropDownOptions = {
+        name: 'Categories',
+        className: 'sjMapCategoryDD',
+        title: '',
+        position: google.maps.ControlPosition.TOP_RIGHT,
+        dropDown: categoryDropDownDiv
       }
-    }
-    dropDownItems.push(new this.separator());
-    dropDownItems.push(new this.optionDiv(divOptions));
+      var categoryDropDown = this.dropDownControl(dropDownOptions);
 
-    var dropDownOptions = { items: dropDownItems, id: 'categoryDropDown' };
-    var categoryDropDownDiv = new this.dropDownOptionsDiv(dropDownOptions);
-    var dropDownOptions = {
-      name: 'Categories',
-      id: 'sjMapCategoryDD',
-      title: '',
-      position: google.maps.ControlPosition.TOP_RIGHT,
-      dropDown: categoryDropDownDiv
     }
-    var categoryDropDown = new this.dropDownControl(dropDownOptions);
-
   }
 
   this.buildPlaybackControls = function() {
+    var _self = this;
     var buttonOptions = {
       name: 'Play',
-      id: 'sjMapPlaybackPlayPause',
+      className: 'sjMapPlaybackPlayPause',
       title: '',
       position: google.maps.ControlPosition.TOP_RIGHT,
       action: function(){
-        if (instance.anim) {
-          clearTimeout(instance.anim);
-          instance.anim = null;
+        if (_self.anim) {
+          clearTimeout(_self.anim);
+          _self.anim = null;
           $(this).text('Play');
         } else {
-          instance.playAnim();
+          _self.playAnim();
           $(this).text('Pause');
         }
       }
     }
-    var playbackControls = new this.buttonControl(buttonOptions);
+    var playbackControls = this.buttonControl(buttonOptions);
   }
 
   //  custom map control functions
@@ -700,7 +694,8 @@ var sjMap = function(){
 
   this.dropDownOptionsDiv = function(options) {
     var container = document.createElement('DIV');
-    container.className = "dropDownOptionsDiv";
+    container.className = options.className ?
+      'dropDownOptionsDiv ' + options.className : 'dropDownOptionsDiv';
     container.id = options.id;
     for (i = 0; i < options.items.length; i++) {
       container.appendChild(options.items[i]);
@@ -712,7 +707,8 @@ var sjMap = function(){
     var container = document.createElement('DIV');
     container.className = 'container';
     var control = document.createElement('DIV');
-    control.className = 'dropDownControl';
+    control.className = options.className ?
+      'dropDownControl '+ options.className : 'dropDownControl';
     control.innerHTML = options.name;
     control.id = options.id;
     var arrow = document.createElement('IMG');
@@ -721,10 +717,11 @@ var sjMap = function(){
     control.appendChild(arrow);
     container.appendChild(control);
     container.appendChild(options.dropDown);
-
-    map.controls[options.position].push(container);
+    this.map.controls[options.position].push(container);
     google.maps.event.addDomListener(container, 'click', function() {
-      (document.getElementById(options.dropDown.id).style.display == 'block') ? document.getElementById(options.dropDown.id).style.display = 'none' : document.getElementById(options.dropDown.id).style.display = 'block';
+      var dropDown = $(this).find('.dropDownOptionsDiv');
+      (dropDown.css('display') == 'block') ?
+        dropDown.css('display', 'none') : dropDown.css('display', 'block');
     })
   }
 
@@ -732,10 +729,10 @@ var sjMap = function(){
     var control = document.createElement('DIV');
     control.innerHTML = options.name;
     control.id = options.id;
-    control.className = 'button container';
+    control.className = options.className ?
+      'button container ' + options.className : 'button container';
     control.index = options.index ? options.index : 1 ;
-    map.controls[options.position].push(control);
+    this.map.controls[options.position].push(control);
     google.maps.event.addDomListener(control, 'click', options.action);
-    return control;
   }
 }
