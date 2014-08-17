@@ -106,32 +106,71 @@ var sjMap = function(elementId){
       routeControl:
         mapOptions.routeControl ?
           mapOptions.routeControl :
-          true,
-      mapTypeControlOptions: {
-        mapTypeIds: [
-          'Styled',
-          google.maps.MapTypeId.ROADMAP,
-          google.maps.MapTypeId.SATELLITE,
-          google.maps.MapTypeId.HYBRID,
-          google.maps.MapTypeId.TERRAIN
-        ],
-        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-        position: google.maps.ControlPosition.TOP_RIGHT
-      },
-      // TODO: fix handling of alternate map types
-      mapTypeId:
-        mapOptions.mapType ?
-          mapOptions.mapType :
-          google.maps.MapTypeId.ROADMAP
+          true
     }
 
+    // Map type settings
+    // All available map types
+    var typeIds = new Array();
+    if (mapOptions.mapTypeOptions) {
+      if (mapOptions.mapType.toUpperCase().indexOf('ROADMAP'))
+        typeIds.push(google.maps.MapTypeId.ROADMAP);
+      if (mapOptions.mapType.toUpperCase().indexOf('SATELLITE'))
+        typeIds.push(google.maps.MapTypeId.SATELLITE);
+      if (mapOptions.mapType.toUpperCase().indexOf('HYBRID'))
+        typeIds.push(google.maps.MapTypeId.HYBRID);
+      if (mapOptions.mapType.toUpperCase().indexOf('TERRAIN'))
+        typeIds.push(google.maps.MapTypeId.TERRAIN);
+      if (this.mapElement.data('map-style') && mapOptions.mapType.toUpperCase().indexOf('STYLED'))
+        typeIds.push('Styled');
+    } else {
+      // default map types
+      typeIds = [
+        google.maps.MapTypeId.ROADMAP,
+        google.maps.MapTypeId.SATELLITE,
+        google.maps.MapTypeId.HYBRID,
+        google.maps.MapTypeId.TERRAIN
+      ];
+      if (this.mapElement.data('map-style'))
+        typeIds.push('Styled');
+    }
+
+    myOptions.mapTypeControlOptions = {
+      mapTypeIds: typeIds,
+      // TODO: control type and position should be configurable
+      style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+      position: google.maps.ControlPosition.TOP_RIGHT
+    };
+
+    // selected type
+    var mapType = mapOptions.mapType ? mapOptions.mapType.toUpperCase() : '' ;
+    switch(mapType) {
+      case 'ROADMAP':
+        myOptions.mapTypeId = google.maps.MapTypeId.ROADMAP;
+      break;
+      case 'SATELLITE':
+        myOptions.mapTypeId = google.maps.MapTypeId.SATELLITE;
+      break;
+      case 'HYBRID':
+        myOptions.mapTypeId = google.maps.MapTypeId.HYBRID;
+      break;
+      case 'TERRAIN':
+        myOptions.mapTypeId = google.maps.MapTypeId.TERRAIN;
+      break;
+      case 'STYLED':
+        myOptions.mapTypeId = 'Styled';
+      break;
+      default:
+        myOptions.mapTypeId = google.maps.MapTypeId.ROADMAP;
+    }
+
+    // TODO: cluster options should be configurable
     var clusterOptions = {
       batchSize: 100,
       averageCenter: true,
       enableRetinaIcons: true,
       gridSize: 20
     }
-
 
     // initialize map
     this.map = new google.maps.Map(this.mapElement.get(0), myOptions );
