@@ -272,7 +272,7 @@ var sjMap = function(elementId){
       markerCoordinates.push(coords);
       if (route['showMarkers'] == 'yes') {
         this.addMarker(
-          marker['id'], marker['name'], coords, marker['icon'], i, null, null,
+          marker['id'], marker['name'], coords, marker['icon'], i, null, null, null,
           'route', route['id'], null
         );
       }
