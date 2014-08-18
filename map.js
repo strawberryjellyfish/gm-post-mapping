@@ -323,12 +323,12 @@ var sjMap = function(elementId){
       var coords = new google.maps.LatLng(marker['lat'], marker['lng']);
       this.addMarker(
         marker['id'], marker['name'], coords, marker['icon'], marker['index'],
-        marker['url'], marker['summary'], 'post', marker['route'], marker['cat']
+        marker['url'], marker['image'], marker['summary'], 'post', marker['route'], marker['cat']
       );
     }
   }
 
-  this.addMarker = function(id, title, coords, icon, z, url, summary, type, route, categories) {
+  this.addMarker = function(id, title, coords, icon, z, url, image, summary, type, route, categories) {
     // add marker to map and store additional attributes to allow identifying
     // marker by route or category.
     var markerIcon = {
@@ -346,6 +346,7 @@ var sjMap = function(elementId){
       title: title,
       zIndex: z,
       url: url,
+      image: image,
       html: summary,
       type: type,
       route: route,
@@ -363,8 +364,9 @@ var sjMap = function(elementId){
       // attach mouseover event if summary exists
       var _self = this;
       google.maps.event.addListener(marker, "mouseover", function() {
-        _self.infoWindow.setContent('<div class="map-info-bubble-text">'+this.html+'</div>');
-        _self.infoWindow.open(this.map, this);
+        _self.openInfoWindow(this);
+        // _self.infoWindow.setContent('<div class="map-info-bubble-text">'+this.html+'</div>');
+        // _self.infoWindow.open(this.map, this);
       });
       google.maps.event.addListener(marker, "mouseout", function() {
         _self.infoWindow.close();
@@ -564,7 +566,13 @@ var sjMap = function(elementId){
   this.openInfoWindow = function(marker, markerId) {
     if (! marker)
       var marker = this.objectFindByKey(markers, 'id', markerId);
-    this.infoWindow.setContent(marker.html);
+    var content = '<div class="map-info-bubble-text">';
+    if (marker.image)
+        content += '<img src="'+ marker.image + '" alt = "' + marker.name + '"/>';
+    if (marker.html)
+      content += marker.html;
+    content += '</div>';
+    this.infoWindow.setContent(content);
     this.infoWindow.open(this.map, marker);
   }
 
