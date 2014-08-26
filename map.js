@@ -189,6 +189,21 @@ var sjMap = function(elementId){
       maxWidth: 500
     });
 
+    // initialise custom infoBox object
+    var infoBoxDiv = $("<div>", {class: "infoBoxWrapper", id: "infoBoxWrapper"});
+    this.mapElement.append(infoBoxDiv);
+
+    this.infoBox = new InfoBox({
+      content: document.getElementById("infoBoxWrapper"),
+      disableAutoPan: false,
+      maxWidth: "400px",
+      pixelOffset: new google.maps.Size(-200, 0),
+      zIndex: null,
+      closeBoxURL: "",
+      infoBoxClearance: new google.maps.Size(1, 1)
+    });
+
+
     // setup marker, category and route variables from element data-attributes
     var postMarkers = this.mapElement.data('post-markers');
     var categories = this.mapElement.data('categories');
@@ -369,7 +384,7 @@ var sjMap = function(elementId){
         // _self.infoWindow.open(this.map, this);
       });
       google.maps.event.addListener(marker, "mouseout", function() {
-        _self.infoWindow.close();
+        _self.infoBox.setVisible(false);
       });
     }
     this.markers[marker.id] = marker;
@@ -564,16 +579,23 @@ var sjMap = function(elementId){
   }
 
   this.openInfoWindow = function(marker, markerId) {
-    if (! marker)
+    if (!marker)
       var marker = this.objectFindByKey(markers, 'id', markerId);
-    var content = '<div class="map-info-bubble-text">';
+    var content = '<div class="customInfoBox"><div class="customInfoBoxContent">';
     if (marker.image)
-        content += '<img src="'+ marker.image + '" alt = "' + marker.name + '"/>';
+        content += '<img src="'+ marker.image + '" alt = "' + marker.title + '" class="customInfoBoxFeaturedImage"/>';
     if (marker.html)
-      content += marker.html;
-    content += '</div>';
-    this.infoWindow.setContent(content);
-    this.infoWindow.open(this.map, marker);
+      content += '<div class="customInfoBoxSummary">' + marker.html + '</div>';
+    content += '</div></div>';
+
+    this.infoBox.setContent(content);
+    //if (!this.infoBox.getVisible())
+      this.infoBox.open(this.map, marker);
+    this.infoBox.setVisible(true);
+
+
+    //this.infoWindow.setContent(content);
+    //this.infoWindow.open(this.map, marker);
   }
 
   this.buildRouteDropdown = function(routes) {
